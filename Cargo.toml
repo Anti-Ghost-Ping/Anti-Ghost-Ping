@@ -1,0 +1,19 @@
+[package]
+name = "anti_ghost_ping"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dotenv = "0.15"
+tracing = "0.1.23"
+tracing-subscriber = "0.3.3"
+
+[dependencies.tokio]
+version = "1.0"
+features = ["macros", "rt-multi-thread"]
+
+[dependencies.serenity]
+version = "0.10.9"
+features = ["cache", "framework", "standard_framework", "rustls_backend"]
