@@ -1,3 +1,6 @@
+mod structures;
+mod helpers;
+
 use std::{env};
 use serenity::{
     framework::{StandardFramework},
@@ -5,6 +8,7 @@ use serenity::{
     async_trait,
     model::{gateway::Ready}
 };
+use structures::bot_data::Prefixes;
 use tracing::{error, info};
 
 struct Handler;
@@ -27,6 +31,8 @@ async fn main() {
 
     let framework = StandardFramework::new().configure(|c| c.prefix("."));
 
+    let prefix_map = todo!();
+
     let mut client = Client::builder(&token)
         .framework(framework)
         .event_handler(Handler)
@@ -34,6 +40,7 @@ async fn main() {
         .expect("Error creating client");
     {
         let mut data = client.data.write().await;
+        data.insert::<Prefixes>(prefix_map);
     }
 
     if let Err(why) = client.start().await {
