@@ -13,13 +13,14 @@ dashmap = "5.0.0"
 
 [dependencies.tokio]
 version = "1.0"
-features = ["macros", "rt-multi-thread"]
+features = ["macros", "rt-multi-thread", "signal"]
 
 [dependencies.serenity]
+default-features = false
 version = "0.10.9"
-features = ["cache", "framework", "standard_framework", "rustls_backend"]
+features = ["cache", "framework", "standard_framework", "default_native_tls"]
 
 [dependencies.sqlx]
 version = "0.5.9"
 default-features = false
-features = ["runtime-tokio-rustls", "postgres", "macros", "offline"]
+features = ["runtime-tokio-native-tls", "postgres", "macros", "offline"]
