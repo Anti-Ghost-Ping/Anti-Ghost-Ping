@@ -1,4 +1,7 @@
-# This is not the production bot code nor a working bot
+# Anti Ghost Ping
+
+## Status 
+This is not the production bot code nor a working bot
 The bot is getting a rewrite in rust and this is the repo for all that stuff yeah
 
 ## Credits
