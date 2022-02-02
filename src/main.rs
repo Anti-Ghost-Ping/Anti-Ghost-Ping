@@ -1,55 +1,93 @@
-mod structures;
-mod helpers;
-
-use std::{
-    env,
-    sync::Arc
+use futures::StreamExt;
+use tracing::info;
+use twilight_cache_inmemory::{InMemoryCache, ResourceType};
+use std::{env, sync::Arc, error::Error};
+use twilight_gateway::{
+    Intents,
+    Cluster,
+    cluster::ShardScheme,
+    Event
 };
-use serenity::{
-    framework::{StandardFramework},
-    prelude::*,
-    async_trait,
-    model::{gateway::Ready}
-};
-use structures::bot_data::Prefixes;
-use helpers::database::*;
-use tracing::{error, info};
-
-struct Handler;
-
-#[async_trait]
-impl EventHandler for Handler {
-    async fn ready(&self, _: Context, _: Ready) {
-        info!("Connected");
+use twilight_http::Client;
+use twilight_model::gateway::{
+    payload::outgoing::update_presence::UpdatePresencePayload,
+    presence::{
+        MinimalActivity,
+        ActivityType,
+        Status
     }
+};
 
-}
+mod events;
+mod context;
+
+use context::AgpContext;
+use events::message;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     dotenv::dotenv().expect("Failed to load .env file");
-    
     tracing_subscriber::fmt::init();
 
-    let token = env::var("BOT_TOKEN").expect("Could not find BOT_TOKEN in the environment");
-    let framework = StandardFramework::new().configure(|c| c.prefix("."));
-    let pool = connect_db(env::var("DATABASE_URL").expect("Could not find DATABASE_URL in the evnironment")).await?;
 
-    let prefix_map = fetch_prefixes(&pool).await?;
+    let token = env::var("DISCORD_TOKEN")?;
+    let intents = Intents::GUILD_MESSAGES | Intents::GUILDS;
+    let scheme = ShardScheme::Auto;
 
-    let mut client = Client::builder(&token)
-        .framework(framework)
-        .event_handler(Handler)
-        .await
-        .expect("Error creating client");
-    {
-        let mut data = client.data.write().await;
-        data.insert::<Prefixes>(Arc::new(prefix_map));
+    let (cluster, mut events) = Cluster::builder(token.to_owned(), intents)
+        .shard_scheme(scheme)
+        .presence(UpdatePresencePayload::new(
+            vec![MinimalActivity {
+                kind: ActivityType::Playing,
+                name: "/help | https://ghostping.xyz".to_string(),
+                url: None
+            }.into()],
+            false,
+            None,
+            Status::Online
+        )?)
+        .build()
+        .await?;
+
+    let cluster = Arc::new(cluster);
+    let cluster_spawn = Arc::clone(&cluster);
+    let http = Client::new(token);
+    let cache = InMemoryCache::builder()
+        .resource_types(ResourceType::MESSAGE)
+        .build();
+    let agp_ctx = Arc::new(
+        AgpContext {
+            http,
+            cache
+        }
+    );
+
+    tokio::spawn(async move {
+        cluster_spawn.up().await;
+    });
+
+    while let Some((id, event)) = events.next().await {
+        tokio::spawn(handle_event(id, event, Arc::clone(&agp_ctx)));
     }
 
-    if let Err(why) = client.start().await {
-        error!("Error Starting Client: {:?}", why);
+    Ok(())
+}
+
+async fn handle_event(
+    shard_id: u64,
+    event: Event,
+    ctx: Arc<AgpContext>
+) -> Result<(), Box<dyn Error + Send + Sync>> {
+    match &event {
+        Event::Ready(_) => {
+            info!("Shard {} is ready!", shard_id)
+        }
+        Event::MessageDelete(msg) => {
+            message::on_message_delete(Arc::clone(&ctx), msg.to_owned()).await?;
+        }
+        _ => ()
     }
+    ctx.cache.update(&event);
 
     Ok(())
 }
