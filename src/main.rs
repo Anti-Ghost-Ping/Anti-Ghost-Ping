@@ -20,6 +20,7 @@ use twilight_model::gateway::{
 
 mod events;
 mod context;
+mod helpers;
 
 use context::AgpContext;
 use events::message;
@@ -28,7 +29,6 @@ use events::message;
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     dotenv::dotenv().expect("Failed to load .env file");
     tracing_subscriber::fmt::init();
-
 
     let token = env::var("DISCORD_TOKEN")?;
     let intents = Intents::GUILD_MESSAGES | Intents::GUILDS;
@@ -84,6 +84,9 @@ async fn handle_event(
         }
         Event::MessageDelete(msg) => {
             message::on_message_delete(Arc::clone(&ctx), msg.to_owned()).await?;
+        }
+        Event::MessageUpdate(msg) => {
+            message::on_message_update(Arc::clone(&ctx), *msg.to_owned()).await?;
         }
         _ => ()
     }
