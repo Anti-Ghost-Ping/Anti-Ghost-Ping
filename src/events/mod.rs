@@ -1,2 +1,2 @@
-pub mod message;
 pub mod interaction;
+pub mod message;

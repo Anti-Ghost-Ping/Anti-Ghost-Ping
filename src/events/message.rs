@@ -1,10 +1,13 @@
-use twilight_model::{gateway::payload::incoming::{MessageDelete, MessageUpdate}};
+use std::{error::Error, sync::Arc};
 use tracing::info;
-use std::{sync::Arc, error::Error};
+use twilight_model::gateway::payload::incoming::{MessageDelete, MessageUpdate};
 
-use crate::{AgpContext, helpers::embed::AlertEmbed};
+use crate::{helpers::embed::AlertEmbed, AgpContext};
 
-pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn on_message_delete(
+    ctx: Arc<AgpContext>,
+    msg: MessageDelete,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let cached_msg = ctx.cache.message(msg.id);
 
     if let Some(cached_msg) = cached_msg {
@@ -15,24 +18,32 @@ pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Resu
                 author: cached_msg.author(),
                 content: cached_msg.content().to_string(),
                 timestamp: cached_msg.timestamp(),
-                reply: None
+                reply: None,
             };
-            
-            ctx.http.create_message(msg.channel_id)
-            .embeds(&[embed.create_embed()])?
-            .exec()
-            .await?;
+
+            ctx.http
+                .create_message(msg.channel_id)
+                .embeds(&[embed.create_embed()])?
+                .exec()
+                .await?;
         }
     }
 
     Ok(())
 }
 
-pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Result<(), Box<dyn Error + Send + Sync>> {
+pub async fn on_message_update(
+    ctx: Arc<AgpContext>,
+    msg: MessageUpdate,
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     let original_msg = ctx.cache.message(msg.id);
 
     if let Some(original_msg) = original_msg {
-        info!("Message Update | {} > {}", original_msg.content(), msg.content.unwrap_or_else(|| "".to_string()));
+        info!(
+            "Message Update | {} > {}",
+            original_msg.content(),
+            msg.content.unwrap_or_else(|| "".to_string())
+        );
     }
 
     Ok(())

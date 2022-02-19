@@ -1,25 +1,16 @@
 use futures::StreamExt;
+use std::{env, error::Error, sync::Arc};
 use tracing::info;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
-use std::{env, sync::Arc, error::Error};
-use twilight_gateway::{
-    Intents,
-    Cluster,
-    cluster::ShardScheme,
-    Event
-};
+use twilight_gateway::{cluster::ShardScheme, Cluster, Event, Intents};
 use twilight_http::Client;
 use twilight_model::gateway::{
     payload::outgoing::update_presence::UpdatePresencePayload,
-    presence::{
-        MinimalActivity,
-        ActivityType,
-        Status
-    }
+    presence::{ActivityType, MinimalActivity, Status},
 };
 
-mod events;
 mod context;
+mod events;
 mod helpers;
 
 use context::AgpContext;
@@ -40,11 +31,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             vec![MinimalActivity {
                 kind: ActivityType::Playing,
                 name: "/help | https://ghostping.xyz".to_string(),
-                url: None
-            }.into()],
+                url: None,
+            }
+            .into()],
             false,
             None,
-            Status::Online
+            Status::Online,
         )?)
         .build()
         .await?;
@@ -55,12 +47,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let cache = InMemoryCache::builder()
         .resource_types(ResourceType::MESSAGE)
         .build();
-    let agp_ctx = Arc::new(
-        AgpContext {
-            http,
-            cache
-        }
-    );
+    let agp_ctx = Arc::new(AgpContext { http, cache });
 
     tokio::spawn(async move {
         cluster_spawn.up().await;
@@ -76,7 +63,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 async fn handle_event(
     shard_id: u64,
     event: Event,
-    ctx: Arc<AgpContext>
+    ctx: Arc<AgpContext>,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     match &event {
         Event::Ready(_) => {
@@ -88,7 +75,7 @@ async fn handle_event(
         Event::MessageUpdate(msg) => {
             message::on_message_update(Arc::clone(&ctx), *msg.to_owned()).await?;
         }
-        _ => ()
+        _ => (),
     }
     ctx.cache.update(&event);
 

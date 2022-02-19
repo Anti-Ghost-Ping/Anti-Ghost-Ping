@@ -3,5 +3,5 @@ use twilight_http::Client;
 
 pub struct AgpContext {
     pub http: Client,
-    pub cache: InMemoryCache
+    pub cache: InMemoryCache,
 }
