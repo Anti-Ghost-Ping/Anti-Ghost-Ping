@@ -45,7 +45,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let cluster_spawn = Arc::clone(&cluster);
     let http = Client::new(token);
     let cache = InMemoryCache::builder()
-        .resource_types(ResourceType::MESSAGE)
+        .resource_types(ResourceType::MESSAGE | ResourceType::USER)
         .build();
     let agp_ctx = Arc::new(AgpContext { http, cache });
 
