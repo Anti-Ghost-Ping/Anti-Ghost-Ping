@@ -12,9 +12,11 @@ use twilight_model::gateway::{
 mod context;
 mod events;
 mod helpers;
+mod structs;
 
 use context::AgpContext;
-use events::message;
+use events::{guild, message};
+use helpers::database::db_connect;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -22,7 +24,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     tracing_subscriber::fmt::init();
 
     let token = env::var("DISCORD_TOKEN")?;
-    let intents = Intents::GUILD_MESSAGES | Intents::GUILDS;
+    let intents = Intents::GUILD_MESSAGES | Intents::GUILDS | Intents::MESSAGE_CONTENT;
     let scheme = ShardScheme::Auto;
 
     let (cluster, mut events) = Cluster::builder(token.to_owned(), intents)
@@ -43,11 +45,14 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let cluster = Arc::new(cluster);
     let cluster_spawn = Arc::clone(&cluster);
+
     let http = Client::new(token);
     let cache = InMemoryCache::builder()
         .resource_types(ResourceType::MESSAGE | ResourceType::USER)
         .build();
-    let agp_ctx = Arc::new(AgpContext { http, cache });
+    let db = db_connect(&env::var("DATABASE_URL")?).await?;
+
+    let agp_ctx = Arc::new(AgpContext { http, cache, db });
 
     tokio::spawn(async move {
         cluster_spawn.up().await;
@@ -74,6 +79,9 @@ async fn handle_event(
         }
         Event::MessageUpdate(msg) => {
             message::on_message_update(Arc::clone(&ctx), *msg.to_owned()).await?;
+        }
+        Event::GuildDelete(guild) => {
+            guild::on_guild_leave(Arc::clone(&ctx), guild).await?;
         }
         _ => (),
     }
