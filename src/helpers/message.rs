@@ -20,10 +20,10 @@ pub fn get_reply(ctx: Arc<AgpContext>, message: CachedMessage) -> Option<CachedM
 }
 
 fn check_user_message(message: &CachedMessage) -> bool {
-    match message.kind() {
-        MessageType::Regular | MessageType::Reply | MessageType::ThreadStarterMessage => true,
-        _ => false,
-    }
+    matches!(
+        message.kind(),
+        MessageType::Regular | MessageType::Reply | MessageType::ThreadStarterMessage
+    )
 }
 
 fn check_message_crosspost(message: &CachedMessage) -> bool {

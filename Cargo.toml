@@ -14,6 +14,7 @@ twilight-cache-inmemory = "0.10.1"
 twilight-gateway = "0.10.1"
 twilight-http = "0.10.1"
 twilight-model = "0.10.1"
+rand = "0.8.5"
 
 [dependencies.twilight-util]
 version = "0.10.1"

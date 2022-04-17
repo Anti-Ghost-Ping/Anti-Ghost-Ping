@@ -1,22 +1,24 @@
-use twilight_embed_builder::{EmbedBuilder, EmbedFieldBuilder, ImageSource};
+use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::{
     channel::embed::Embed,
     datetime::Timestamp,
-    gateway::payload::incoming::MessageUpdate,
     id::{marker::UserMarker, Id},
 };
+use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, ImageSource};
 
 pub struct AlertEmbed {
     pub author: Id<UserMarker>,
+    pub color: u32,
     pub content: String,
+    pub field_title: String,
+    pub reply: Option<CachedMessage>,
     pub timestamp: Timestamp,
-    pub reply: Option<MessageUpdate>,
 }
 
 impl AlertEmbed {
-    pub fn create_embed(&self) -> Embed {
+    pub fn build(&self) -> Embed {
         let embed = EmbedBuilder::new()
-            .color(16711712)
+            .color(self.color)
             .title("Ghost Ping Found!")
             .thumbnail(
                 ImageSource::url("https://ghostping.xyz/static/assets/bot_logo.png").unwrap(),
@@ -26,19 +28,11 @@ impl AlertEmbed {
                 EmbedFieldBuilder::new("Author:", format!("<@{}>", self.author.to_owned()))
                     .inline(),
             )
-            .field(EmbedFieldBuilder::new("Message:", self.content.to_owned()).inline());
+            .field(
+                EmbedFieldBuilder::new(self.field_title.to_owned(), self.content.to_owned())
+                    .inline(),
+            );
 
-        let embed = match self.reply.to_owned() {
-            Some(msg) => embed.field(
-                EmbedFieldBuilder::new(
-                    "Replied:",
-                    msg.content.unwrap_or_else(|| "N/A".to_string()),
-                )
-                .inline(),
-            ),
-            None => embed,
-        };
-
-        embed.build().unwrap()
+        embed.build()
     }
 }
