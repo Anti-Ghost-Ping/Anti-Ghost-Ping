@@ -6,3 +6,4 @@ pub struct GuildConfig {
     pub mention_only: bool,
     pub color: Option<i32>,
 }
+
