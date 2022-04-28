@@ -24,10 +24,7 @@ impl AlertEmbed {
                 ImageSource::url("https://ghostping.xyz/static/assets/bot_logo.png").unwrap(),
             )
             .timestamp(self.timestamp.to_owned())
-            .field(
-                EmbedFieldBuilder::new("Author:", format!("<@{}>", self.author.to_owned()))
-                    .inline(),
-            )
+            .field(EmbedFieldBuilder::new("Author:", format!("<@{}>", self.author)).inline())
             .field(
                 EmbedFieldBuilder::new(self.field_title.to_owned(), self.content.to_owned())
                     .inline(),

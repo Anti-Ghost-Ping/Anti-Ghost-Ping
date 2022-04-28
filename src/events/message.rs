@@ -1,8 +1,6 @@
 use rand::Rng;
-use twilight_cache_inmemory::model::CachedMessage;
 use std::time::SystemTime;
 use std::{error::Error, sync::Arc};
-use tracing::info;
 use twilight_model::id::marker::ChannelMarker;
 use twilight_model::id::Id;
 use twilight_model::{
@@ -12,22 +10,21 @@ use twilight_model::{
 
 use crate::{
     helpers::{embed::AlertEmbed, message},
-    structs::GuildConfig,
+    structs::{GuildConfig, Message},
     AgpContext,
 };
 
 pub async fn handle_ghost_ping(
     ctx: &Arc<AgpContext>,
-    cached_msg: CachedMessage,
+    msg: Message<'_>,
     config: GuildConfig,
     title: &str,
-    content: &str
+    content: &str,
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
-
-    let reply = message::get_reply(Arc::clone(&ctx), cached_msg.clone());
+    let reply = message::get_reply(Arc::clone(ctx), msg.clone());
     let channel = match config.channel_id {
         Some(channel) => Id::<ChannelMarker>::new(channel as u64),
-        None => cached_msg.channel_id(),
+        None => msg.channel_id,
     };
     let time = Timestamp::from_secs(
         SystemTime::now()
@@ -48,7 +45,7 @@ pub async fn handle_ghost_ping(
         16711712
     };
     let embed = AlertEmbed {
-        author: cached_msg.author(),
+        author: msg.author,
         color: color as u32,
         content: content.to_string(),
         timestamp: time,
@@ -73,7 +70,7 @@ pub async fn on_message_delete(
 
     let author = ctx.cache.user(cached_msg.author()).unwrap();
     let guild_id = cached_msg.guild_id().unwrap();
-    
+
     let query: Option<GuildConfig> = sqlx::query_as!(
         GuildConfig,
         r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
@@ -92,13 +89,19 @@ pub async fn on_message_delete(
 
     if !author.bot {
         if cached_msg.mention_everyone() {
-            let (title, content) =
-                if cached_msg.content().len() > 2500 || config.mention_only {
-                    ("Mentions:", "Message contained @everyone and/or @here ping")
-                } else {
-                    ("Message:", cached_msg.content())
-                };
-            handle_ghost_ping(&ctx, cached_msg.clone(), config, title, content).await?;
+            let (title, content) = if cached_msg.content().len() > 2500 || config.mention_only {
+                ("Mentions:", "Message contained @everyone and/or @here ping")
+            } else {
+                ("Message:", cached_msg.content())
+            };
+            handle_ghost_ping(
+                &ctx,
+                Message::from_cache(&cached_msg),
+                config,
+                title,
+                content,
+            )
+            .await?;
         } else if !(cached_msg.mentions().is_empty() && cached_msg.mention_roles().is_empty()) {
             let (title, content) = if cached_msg.content().len() > 2500 || config.mention_only {
                 (
@@ -108,12 +111,13 @@ pub async fn on_message_delete(
                         .iter()
                         .map(|m| format!("<@{}>", m.get()))
                         .collect::<Vec<String>>()
-                        .join(" ")
+                        .join(" "),
                 )
             } else {
                 ("Message:", cached_msg.content().to_string())
             };
-            handle_ghost_ping(&ctx, cached_msg.clone(), config, title, &content).await?;
+            let converted_msg = Message::from_cache(&cached_msg);
+            handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
         }
     }
 
@@ -126,7 +130,7 @@ pub async fn on_message_update(
 ) -> Result<(), Box<dyn Error + Send + Sync>> {
     let original_msg = ctx.cache.message(msg.id);
     let guild_id = msg.guild_id.unwrap();
-    
+
     let query: Option<GuildConfig> = sqlx::query_as!(
         GuildConfig,
         r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
@@ -147,12 +151,16 @@ pub async fn on_message_update(
         if !author.bot {
             if original_msg.mention_everyone() {
                 let (title, content) =
-                    if msg.content.unwrap().len() > 2500 || config.mention_only {
-                        ("Mentions:", String::from("Message contained @everyone and/or @here ping"))
+                    if msg.content.as_ref().unwrap().len() > 2500 || config.mention_only {
+                        (
+                            "Mentions:",
+                            String::from("Message contained @everyone and/or @here ping"),
+                        )
                     } else {
-                        ("Message:", msg.content.unwrap())
+                        ("Message:", msg.content.as_ref().unwrap().to_owned())
                     };
-                handle_ghost_ping(&ctx, idk, config, title, &content);
+                let converted_msg = Message::from_update(msg);
+                handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
             }
         }
     }
