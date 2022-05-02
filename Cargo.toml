@@ -15,6 +15,7 @@ twilight-gateway = "0.10.1"
 twilight-http = "0.10.1"
 twilight-model = "0.10.1"
 rand = "0.8.5"
+anyhow = "1.0.57"
 
 [dependencies.twilight-util]
 version = "0.10.1"

@@ -1,8 +1,9 @@
 use sqlx::{postgres::PgPoolOptions, PgPool};
+use anyhow::Result;
 
 pub async fn db_connect(
     connection_string: &str,
-) -> Result<PgPool, Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<PgPool> {
     Ok(PgPoolOptions::new()
         .max_connections(10)
         .connect(connection_string)

@@ -1,12 +1,14 @@
 use rand::Rng;
+use std::collections::HashSet;
 use std::time::SystemTime;
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 use twilight_model::id::marker::ChannelMarker;
 use twilight_model::id::Id;
 use twilight_model::{
     datetime::Timestamp,
     gateway::payload::incoming::{MessageDelete, MessageUpdate},
 };
+use anyhow::Result;
 
 use crate::{
     helpers::{embed::AlertEmbed, message},
@@ -20,7 +22,7 @@ pub async fn handle_ghost_ping(
     config: GuildConfig,
     title: &str,
     content: &str,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+) -> Result<()> {
     let reply = message::get_reply(Arc::clone(ctx), msg.clone());
     let channel = match config.channel_id {
         Some(channel) => Id::<ChannelMarker>::new(channel as u64),
@@ -65,7 +67,7 @@ pub async fn handle_ghost_ping(
 pub async fn on_message_delete(
     ctx: Arc<AgpContext>,
     msg: MessageDelete,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+) -> Result<()> {
     let cached_msg = ctx.cache.message(msg.id).unwrap();
 
     let author = ctx.cache.user(cached_msg.author()).unwrap();
@@ -127,7 +129,7 @@ pub async fn on_message_delete(
 pub async fn on_message_update(
     ctx: Arc<AgpContext>,
     msg: MessageUpdate,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+) -> Result<()> {
     let original_msg = ctx.cache.message(msg.id);
     let guild_id = msg.guild_id.unwrap();
 
@@ -149,7 +151,29 @@ pub async fn on_message_update(
     if let Some(original_msg) = original_msg {
         let author = ctx.cache.user(original_msg.author()).unwrap();
         if !author.bot {
-            if original_msg.mention_everyone() {
+
+            let mut orig_mentions = HashSet::new();
+            let mut new_mentions = HashSet::new();
+            for mention in original_msg.mentions().iter() {
+                orig_mentions.insert(mention.clone());
+            }
+            for mention in msg.mentions.as_ref().unwrap() {
+                new_mentions.insert(mention.id);
+            }
+
+            if original_msg.mention_everyone() && !msg.mention_everyone.unwrap() {
+                let (title, content) =
+                    if msg.content.as_ref().unwrap().len() > 2500 || config.mention_only {
+                        (
+                            "Mentions:",
+                            String::from("Message contained @everyone and/or @here ping"),
+                        )
+                    } else {
+                        ("Message:", msg.content.as_ref().unwrap().to_owned())
+                    };
+                let converted_msg = Message::from_update(msg);
+                handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
+            } else if new_mentions.is_superset(&orig_mentions) {
                 let (title, content) =
                     if msg.content.as_ref().unwrap().len() > 2500 || config.mention_only {
                         (

@@ -1,5 +1,5 @@
 use futures::StreamExt;
-use std::{env, error::Error, sync::Arc};
+use std::{env, sync::Arc};
 use tracing::info;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{cluster::ShardScheme, Cluster, Event, Intents};
@@ -17,9 +17,10 @@ mod structs;
 use context::AgpContext;
 use events::{guild, message};
 use helpers::database::db_connect;
+use anyhow::Result;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+async fn main() -> Result<()> {
     dotenv::dotenv().expect("Failed to load .env file");
     tracing_subscriber::fmt::init();
 
@@ -69,7 +70,7 @@ async fn handle_event(
     shard_id: u64,
     event: Event,
     ctx: Arc<AgpContext>,
-) -> Result<(), Box<dyn Error + Send + Sync>> {
+) -> Result<()> {
     match &event {
         Event::Ready(_) => {
             info!("Shard {} is ready!", shard_id)
