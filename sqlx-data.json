@@ -1,0 +1,59 @@
+{
+  "db": "PostgreSQL",
+  "faf37344dc4f3b039bc554f765146d399d70ac27f7cfea01df365c5d18e14c2d": {
+    "query": "DELETE FROM guild_configs WHERE guild_id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "fc6670c960eb9d92a25433ae827d2bd02e86aa7ba5cb3f4b458f10c858d90234": {
+    "query": "SELECT * FROM guild_configs WHERE guild_id = $1",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "guild_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "channel_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 2,
+          "name": "everyone",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 3,
+          "name": "mention_only",
+          "type_info": "Bool"
+        },
+        {
+          "ordinal": 4,
+          "name": "color",
+          "type_info": "Int4"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        true,
+        false,
+        false,
+        true
+      ]
+    }
+  }
+}
