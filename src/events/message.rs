@@ -1,14 +1,14 @@
+use anyhow::Result;
 use rand::Rng;
 use std::collections::HashSet;
-use std::time::SystemTime;
 use std::sync::Arc;
+use std::time::SystemTime;
 use twilight_model::id::marker::ChannelMarker;
 use twilight_model::id::Id;
 use twilight_model::{
     datetime::Timestamp,
     gateway::payload::incoming::{MessageDelete, MessageUpdate},
 };
-use anyhow::Result;
 
 use crate::{
     helpers::{embed::AlertEmbed, message},
@@ -64,10 +64,7 @@ pub async fn handle_ghost_ping(
     Ok(())
 }
 
-pub async fn on_message_delete(
-    ctx: Arc<AgpContext>,
-    msg: MessageDelete,
-) -> Result<()> {
+pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Result<()> {
     let cached_msg = ctx.cache.message(msg.id).unwrap();
 
     let author = ctx.cache.user(cached_msg.author()).unwrap();
@@ -126,10 +123,7 @@ pub async fn on_message_delete(
     Ok(())
 }
 
-pub async fn on_message_update(
-    ctx: Arc<AgpContext>,
-    msg: MessageUpdate,
-) -> Result<()> {
+pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Result<()> {
     let original_msg = ctx.cache.message(msg.id);
     let guild_id = msg.guild_id.unwrap();
 
@@ -151,11 +145,10 @@ pub async fn on_message_update(
     if let Some(original_msg) = original_msg {
         let author = ctx.cache.user(original_msg.author()).unwrap();
         if !author.bot {
-
             let mut orig_mentions = HashSet::new();
             let mut new_mentions = HashSet::new();
             for mention in original_msg.mentions().iter() {
-                orig_mentions.insert(mention.clone());
+                orig_mentions.insert(*mention);
             }
             for mention in msg.mentions.as_ref().unwrap() {
                 new_mentions.insert(mention.id);

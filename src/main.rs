@@ -14,10 +14,10 @@ mod events;
 mod helpers;
 mod structs;
 
+use anyhow::Result;
 use context::AgpContext;
 use events::{guild, message};
 use helpers::database::db_connect;
-use anyhow::Result;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -66,11 +66,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-async fn handle_event(
-    shard_id: u64,
-    event: Event,
-    ctx: Arc<AgpContext>,
-) -> Result<()> {
+async fn handle_event(shard_id: u64, event: Event, ctx: Arc<AgpContext>) -> Result<()> {
     match &event {
         Event::Ready(_) => {
             info!("Shard {} is ready!", shard_id)
