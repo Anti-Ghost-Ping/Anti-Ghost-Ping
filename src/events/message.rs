@@ -70,24 +70,24 @@ pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Resu
     let author = ctx.cache.user(cached_msg.author()).unwrap();
     let guild_id = cached_msg.guild_id().unwrap();
 
-    let query: Option<GuildConfig> = sqlx::query_as!(
-        GuildConfig,
-        r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
-        guild_id.get() as i64
-    )
-    .fetch_optional(&ctx.db)
-    .await?;
-
-    let config = query.unwrap_or(GuildConfig {
-        guild_id: 0,
-        channel_id: None,
-        everyone: false,
-        mention_only: false,
-        color: None,
-    });
-
     if !author.bot {
         if cached_msg.mention_everyone() {
+            let query: Option<GuildConfig> = sqlx::query_as!(
+                GuildConfig,
+                r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
+                guild_id.get() as i64
+            )
+            .fetch_optional(&ctx.db)
+            .await?;
+
+            let config = query.unwrap_or(GuildConfig {
+                guild_id: 0,
+                channel_id: None,
+                everyone: false,
+                mention_only: false,
+                color: None,
+            });
+
             let (title, content) = if cached_msg.content().len() > 2500 || config.mention_only {
                 ("Mentions:", "Message contained @everyone and/or @here ping")
             } else {
@@ -102,6 +102,22 @@ pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Resu
             )
             .await?;
         } else if !(cached_msg.mentions().is_empty() && cached_msg.mention_roles().is_empty()) {
+            let query: Option<GuildConfig> = sqlx::query_as!(
+                GuildConfig,
+                r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
+                guild_id.get() as i64
+            )
+            .fetch_optional(&ctx.db)
+            .await?;
+
+            let config = query.unwrap_or(GuildConfig {
+                guild_id: 0,
+                channel_id: None,
+                everyone: false,
+                mention_only: false,
+                color: None,
+            });
+
             let (title, content) = if cached_msg.content().len() > 2500 || config.mention_only {
                 (
                     "Mentions:",
@@ -110,7 +126,13 @@ pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Resu
                         .iter()
                         .map(|m| format!("<@{}>", m.get()))
                         .collect::<Vec<String>>()
-                        .join(" "),
+                        .join(" ")
+                        + &cached_msg
+                            .mention_roles()
+                            .iter()
+                            .map(|m| format!("<@&{}>", m.get()))
+                            .collect::<Vec<String>>()
+                            .join(" "),
                 )
             } else {
                 ("Message:", cached_msg.content().to_string())
@@ -127,34 +149,42 @@ pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Resu
     let original_msg = ctx.cache.message(msg.id);
     let guild_id = msg.guild_id.unwrap();
 
-    let query: Option<GuildConfig> = sqlx::query_as!(
-        GuildConfig,
-        r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
-        guild_id.get() as i64
-    )
-    .fetch_optional(&ctx.db)
-    .await?;
-
-    let config = query.unwrap_or(GuildConfig {
-        guild_id: 0,
-        channel_id: None,
-        everyone: false,
-        mention_only: false,
-        color: None,
-    });
     if let Some(original_msg) = original_msg {
         let author = ctx.cache.user(original_msg.author()).unwrap();
         if !author.bot {
             let mut orig_mentions = HashSet::new();
+            let mut orig_role_mentions = HashSet::new();
             let mut new_mentions = HashSet::new();
+            let mut new_role_mentions = HashSet::new();
             for mention in original_msg.mentions().iter() {
                 orig_mentions.insert(*mention);
             }
             for mention in msg.mentions.as_ref().unwrap() {
                 new_mentions.insert(mention.id);
             }
-
+            for mention in original_msg.mention_roles().iter() {
+                orig_role_mentions.insert(*mention);
+            }
+            for mention in msg.mention_roles.as_ref().unwrap() {
+                new_role_mentions.insert(*mention);
+            }
             if original_msg.mention_everyone() && !msg.mention_everyone.unwrap() {
+                let query: Option<GuildConfig> = sqlx::query_as!(
+                    GuildConfig,
+                    r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
+                    guild_id.get() as i64
+                )
+                .fetch_optional(&ctx.db)
+                .await?;
+
+                let config = query.unwrap_or(GuildConfig {
+                    guild_id: 0,
+                    channel_id: None,
+                    everyone: false,
+                    mention_only: false,
+                    color: None,
+                });
+
                 let (title, content) =
                     if msg.content.as_ref().unwrap().len() > 2500 || config.mention_only {
                         (
@@ -162,19 +192,46 @@ pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Resu
                             String::from("Message contained @everyone and/or @here ping"),
                         )
                     } else {
-                        ("Message:", msg.content.as_ref().unwrap().to_owned())
+                        ("Message:", original_msg.content().to_string())
                     };
                 let converted_msg = Message::from_update(msg);
                 handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
-            } else if new_mentions.is_superset(&orig_mentions) {
+            } else if !orig_mentions.is_subset(&new_mentions) || !orig_role_mentions.is_subset(&new_role_mentions) {
+                let query: Option<GuildConfig> = sqlx::query_as!(
+                    GuildConfig,
+                    r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
+                    guild_id.get() as i64
+                )
+                .fetch_optional(&ctx.db)
+                .await?;
+
+                let config = query.unwrap_or(GuildConfig {
+                    guild_id: 0,
+                    channel_id: None,
+                    everyone: false,
+                    mention_only: false,
+                    color: None,
+                });
+
                 let (title, content) =
                     if msg.content.as_ref().unwrap().len() > 2500 || config.mention_only {
                         (
                             "Mentions:",
-                            String::from("Message contained @everyone and/or @here ping"),
+                            original_msg
+                                .mentions()
+                                .iter()
+                                .map(|m| format!("<@{}>", m.get()))
+                                .collect::<Vec<String>>()
+                                .join(" ")
+                                + &original_msg
+                                    .mention_roles()
+                                    .iter()
+                                    .map(|m| format!("<@&{}>", m.get()))
+                                    .collect::<Vec<String>>()
+                                    .join(" "),
                         )
                     } else {
-                        ("Message:", msg.content.as_ref().unwrap().to_owned())
+                        ("Message:", original_msg.content().to_string())
                     };
                 let converted_msg = Message::from_update(msg);
                 handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
