@@ -4,11 +4,17 @@ use tracing::info;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{cluster::ShardScheme, Cluster, Event, Intents};
 use twilight_http::Client;
-use twilight_model::gateway::{
-    payload::outgoing::update_presence::UpdatePresencePayload,
-    presence::{ActivityType, MinimalActivity, Status},
+
+#[allow(unused_imports)]
+use twilight_model::{
+    gateway::{
+        payload::outgoing::update_presence::UpdatePresencePayload,
+        presence::{ActivityType, MinimalActivity, Status},
+    },
+    id::Id,
 };
 
+mod commands;
 mod context;
 mod events;
 mod helpers;
@@ -16,7 +22,7 @@ mod structs;
 
 use anyhow::Result;
 use context::AgpContext;
-use events::{guild, message};
+use events::*;
 use helpers::database::db_connect;
 
 #[tokio::main]
@@ -53,6 +59,25 @@ async fn main() -> Result<()> {
         .build();
     let db = db_connect(&env::var("DATABASE_URL")?).await?;
 
+    let current_app = http
+        .current_user_application()
+        .exec()
+        .await?
+        .model()
+        .await?;
+
+    let interaction = http.interaction(current_app.id);
+
+    interaction
+        .set_global_commands(&commands::commands())
+        .exec()
+        .await?;
+    
+    // interaction
+    //     .set_guild_commands(Id::new(700419839092850698), &[])
+    //     .exec()
+    //     .await?;
+
     let agp_ctx = Arc::new(AgpContext { http, cache, db });
 
     tokio::spawn(async move {
@@ -79,6 +104,9 @@ async fn handle_event(shard_id: u64, event: Event, ctx: Arc<AgpContext>) -> Resu
         }
         Event::GuildDelete(guild) => {
             guild::on_guild_leave(Arc::clone(&ctx), guild).await?;
+        }
+        Event::InteractionCreate(interaction) => {
+            interaction::handle_interaction(Arc::clone(&ctx), interaction.0.to_owned()).await?;
         }
         _ => (),
     }
