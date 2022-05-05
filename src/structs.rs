@@ -1,12 +1,37 @@
-use twilight_cache_inmemory::model::CachedMessage;
+use std::sync::atomic::AtomicU32;
+
 use twilight_model::{
     channel::message::{MessageFlags, MessageReference, MessageType},
-    gateway::payload::incoming::MessageUpdate,
     id::{
         marker::{ChannelMarker, UserMarker},
         Id,
     },
 };
+use serde::Deserialize;
+use sqlx::PgPool;
+use twilight_cache_inmemory::InMemoryCache;
+
+pub struct AgpContext {
+    pub http: twilight_http::Client,
+    pub cache: InMemoryCache,
+    pub db: PgPool,
+    pub reqwest: reqwest::Client,
+    pub stats: Counters
+}
+
+pub struct Counters {
+    pub guild_count: AtomicU32,
+    pub total_pings: AtomicU32
+}
+
+impl Default for Counters {
+    fn default() -> Self {
+        Counters { 
+            guild_count: AtomicU32::new(0),
+            total_pings: AtomicU32::new(0)
+        }
+    }
+}
 
 #[derive(Debug)]
 pub struct GuildConfig {
@@ -27,26 +52,9 @@ pub struct Message<'a> {
     pub flags: Option<MessageFlags>,
 }
 
-impl<'a> Message<'a> {
-    pub fn from_update(msg: MessageUpdate) -> Self {
-        Message {
-            content: msg.content.unwrap(),
-            channel_id: msg.channel_id,
-            author: msg.author.unwrap().id,
-            reference: None,
-            kind: msg.kind.unwrap(),
-            flags: None,
-        }
-    }
-
-    pub fn from_cache(msg: &'a CachedMessage) -> Self {
-        Message {
-            content: msg.content().to_string(),
-            channel_id: msg.channel_id(),
-            author: msg.author(),
-            reference: msg.reference(),
-            kind: msg.kind(),
-            flags: msg.flags(),
-        }
-    }
+#[derive(Deserialize)]
+pub struct Stats {
+    pub guild_count: u32,
+    pub ppm: u32,
+    pub total_pings: u32
 }

@@ -2,8 +2,10 @@ use std::sync::Arc;
 
 use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::channel::message::{MessageFlags, MessageType};
+use twilight_model::gateway::payload::incoming::MessageUpdate;
 
-use crate::{context::AgpContext, structs::Message};
+
+use crate::structs::{Message, AgpContext};
 
 pub fn get_reply(ctx: Arc<AgpContext>, message: Message) -> Option<CachedMessage> {
     if let Some(reply) = message.reference {
@@ -33,4 +35,28 @@ fn check_message_crosspost(message: &Message) -> bool {
         }
     }
     false
+}
+
+impl<'a> Message<'a> {
+    pub fn from_update(msg: MessageUpdate) -> Self {
+        Message {
+            content: msg.content.unwrap(),
+            channel_id: msg.channel_id,
+            author: msg.author.unwrap().id,
+            reference: None,
+            kind: msg.kind.unwrap(),
+            flags: None,
+        }
+    }
+
+    pub fn from_cache(msg: &'a CachedMessage) -> Self {
+        Message {
+            content: msg.content().to_string(),
+            channel_id: msg.channel_id(),
+            author: msg.author(),
+            reference: msg.reference(),
+            kind: msg.kind(),
+            flags: msg.flags(),
+        }
+    }
 }
