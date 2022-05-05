@@ -61,7 +61,7 @@ pub async fn handle_ghost_ping(
         .exec()
         .await?;
 
-    ctx.increment_stats();
+    ctx.increment_stats().await?;
     
     Ok(())
 }
