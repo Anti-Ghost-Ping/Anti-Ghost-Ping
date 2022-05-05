@@ -4,7 +4,7 @@ use anyhow::Result;
 use tracing::warn;
 use twilight_model::application::interaction::Interaction;
 
-use crate::{commands, context::AgpContext};
+use crate::{commands, structs::AgpContext};
 
 pub async fn handle_interaction(ctx: Arc<AgpContext>, interaction: Interaction) -> Result<()> {
     let command = match interaction {

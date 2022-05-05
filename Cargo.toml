@@ -16,6 +16,8 @@ twilight-http = "0.10.1"
 twilight-model = "0.10.1"
 rand = "0.8.5"
 anyhow = "1.0.57"
+serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.11.10", features = ["json"] }
 
 [dependencies.twilight-util]
 version = "0.10.1"

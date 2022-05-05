@@ -15,15 +15,14 @@ use twilight_model::{
 };
 
 mod commands;
-mod context;
 mod events;
 mod helpers;
 mod structs;
 
 use anyhow::Result;
-use context::AgpContext;
 use events::*;
-use helpers::database::db_connect;
+use helpers::{database::db_connect, api};
+use structs::AgpContext;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -58,6 +57,7 @@ async fn main() -> Result<()> {
         .resource_types(ResourceType::MESSAGE | ResourceType::USER)
         .build();
     let db = db_connect(&env::var("DATABASE_URL")?).await?;
+    let reqwest = api::create_client().await?;
 
     let current_app = http
         .current_user_application()
@@ -78,7 +78,7 @@ async fn main() -> Result<()> {
     //     .exec()
     //     .await?;
 
-    let agp_ctx = Arc::new(AgpContext { http, cache, db });
+    let agp_ctx = Arc::new(AgpContext { http, cache, db, reqwest, stats: Default::default() });
 
     tokio::spawn(async move {
         cluster_spawn.up().await;

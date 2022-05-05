@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Result;
 use twilight_model::gateway::payload::incoming::GuildDelete;
 
-use crate::context::AgpContext;
+use crate::structs::AgpContext;
 
 pub async fn on_guild_leave(ctx: Arc<AgpContext>, guild: &GuildDelete) -> Result<()> {
     sqlx::query!(

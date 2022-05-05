@@ -10,7 +10,7 @@ use twilight_model::{
     id::Id,
 };
 
-use crate::context::AgpContext;
+use crate::structs::AgpContext;
 
 #[allow(dead_code)]
 pub fn commands() -> [Command; 4] {
