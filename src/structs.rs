@@ -3,11 +3,12 @@ use std::sync::atomic::AtomicU32;
 use twilight_model::{
     channel::message::{MessageFlags, MessageReference, MessageType},
     id::{
-        marker::{ChannelMarker, UserMarker},
+        marker::{ChannelMarker, UserMarker, ApplicationMarker},
         Id,
     },
 };
 use serde::Deserialize;
+use serde::Serialize;
 use sqlx::PgPool;
 use twilight_cache_inmemory::InMemoryCache;
 
@@ -16,12 +17,19 @@ pub struct AgpContext {
     pub cache: InMemoryCache,
     pub db: PgPool,
     pub reqwest: reqwest::Client,
-    pub stats: Counters
+    pub stats: Counters,
+    pub app_id: Id<ApplicationMarker>
 }
 
 pub struct Counters {
     pub guild_count: AtomicU32,
     pub total_pings: AtomicU32
+}
+
+#[derive(Serialize)]
+pub struct PostData {
+    pub guild_count: u32,
+    pub total_pings: u32
 }
 
 impl Default for Counters {

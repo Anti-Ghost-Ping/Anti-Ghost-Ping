@@ -1,6 +1,6 @@
 use futures::StreamExt;
-use std::{env, sync::Arc};
-use tracing::info;
+use std::{env, sync::{Arc}, time::Duration};
+use tracing::{info, warn};
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{cluster::ShardScheme, Cluster, Event, Intents};
 use twilight_http::Client;
@@ -78,7 +78,19 @@ async fn main() -> Result<()> {
     //     .exec()
     //     .await?;
 
-    let agp_ctx = Arc::new(AgpContext { http, cache, db, reqwest, stats: Default::default() });
+    let agp_ctx = Arc::new(AgpContext { http, cache, db, reqwest, stats: Default::default(), app_id: current_app.id });
+    
+    let interval_ctx = Arc::clone(&agp_ctx);
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(600));
+        interval.tick().await;
+        loop {
+            interval.tick().await;
+            if let Err(why) = interval_ctx.increment_stats().await {
+                warn!("Stats could not be incremented: {}", why);
+            }
+        }
+    });
 
     tokio::spawn(async move {
         cluster_spawn.up().await;
