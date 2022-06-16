@@ -1,8 +1,8 @@
 use futures::StreamExt;
-use std::{env, sync::{Arc}, time::Duration};
+use std::{env, sync::Arc, time::Duration};
 use tracing::{info, warn};
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
-use twilight_gateway::{cluster::ShardScheme, Cluster, Event, Intents};
+use twilight_gateway::{Cluster, Event, Intents};
 use twilight_http::Client;
 
 #[allow(unused_imports)]
@@ -21,7 +21,7 @@ mod structs;
 
 use anyhow::Result;
 use events::*;
-use helpers::{database::db_connect, api};
+use helpers::{api, database::db_connect};
 use structs::AgpContext;
 
 #[tokio::main]
@@ -31,10 +31,8 @@ async fn main() -> Result<()> {
 
     let token = env::var("DISCORD_TOKEN")?;
     let intents = Intents::GUILD_MESSAGES | Intents::GUILDS | Intents::MESSAGE_CONTENT;
-    let scheme = ShardScheme::Auto;
 
     let (cluster, mut events) = Cluster::builder(token.to_owned(), intents)
-        .shard_scheme(scheme)
         .presence(UpdatePresencePayload::new(
             vec![MinimalActivity {
                 kind: ActivityType::Playing,
@@ -69,17 +67,24 @@ async fn main() -> Result<()> {
     let interaction = http.interaction(current_app.id);
 
     interaction
-        .set_global_commands(&commands::commands())
+        .set_global_commands(&helpers::commands())
         .exec()
         .await?;
-    
+
     // interaction
     //     .set_guild_commands(Id::new(700419839092850698), &[])
     //     .exec()
     //     .await?;
 
-    let agp_ctx = Arc::new(AgpContext { http, cache, db, reqwest, stats: Default::default(), app_id: current_app.id });
-    
+    let agp_ctx = Arc::new(AgpContext {
+        http,
+        cache,
+        db,
+        reqwest,
+        stats: Default::default(),
+        app_id: current_app.id,
+    });
+
     let interval_ctx = Arc::clone(&agp_ctx);
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(Duration::from_secs(600));

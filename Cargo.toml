@@ -10,17 +10,17 @@ futures = "0.3.19"
 dotenv = "0.15"
 tracing = "0.1.23"
 tracing-subscriber = "0.3.3"
-twilight-cache-inmemory = "0.10.1"
-twilight-gateway = "0.10.1"
-twilight-http = "0.10.1"
-twilight-model = "0.10.1"
+twilight-cache-inmemory = "0.11.0"
+twilight-gateway = "0.11.0"
+twilight-http = "0.11.0"
+twilight-model = "0.11.0"
 rand = "0.8.5"
 anyhow = "1.0.57"
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.11.10", features = ["json"] }
 
 [dependencies.twilight-util]
-version = "0.10.1"
+version = "0.11.0"
 features = ["builder"]
 
 [dependencies.tokio]

@@ -4,8 +4,7 @@ use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::channel::message::{MessageFlags, MessageType};
 use twilight_model::gateway::payload::incoming::MessageUpdate;
 
-
-use crate::structs::{Message, AgpContext};
+use crate::structs::{AgpContext, Message};
 
 pub fn get_reply(ctx: Arc<AgpContext>, message: Message) -> Option<CachedMessage> {
     if let Some(reply) = message.reference {

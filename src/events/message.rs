@@ -6,7 +6,7 @@ use std::time::SystemTime;
 use twilight_model::id::marker::ChannelMarker;
 use twilight_model::id::Id;
 use twilight_model::{
-    datetime::Timestamp,
+    util::Timestamp,
     gateway::payload::incoming::{MessageDelete, MessageUpdate},
 };
 
@@ -62,7 +62,7 @@ pub async fn handle_ghost_ping(
         .await?;
 
     ctx.increment_stats().await?;
-    
+
     Ok(())
 }
 
@@ -198,7 +198,9 @@ pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Resu
                     };
                 let converted_msg = Message::from_update(msg);
                 handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
-            } else if !orig_mentions.is_subset(&new_mentions) || !orig_role_mentions.is_subset(&new_role_mentions) {
+            } else if !orig_mentions.is_subset(&new_mentions)
+                || !orig_role_mentions.is_subset(&new_role_mentions)
+            {
                 let query: Option<GuildConfig> = sqlx::query_as!(
                     GuildConfig,
                     r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,

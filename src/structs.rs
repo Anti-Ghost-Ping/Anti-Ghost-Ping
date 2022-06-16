@@ -1,16 +1,16 @@
 use std::sync::atomic::AtomicU32;
 
-use twilight_model::{
-    channel::message::{MessageFlags, MessageReference, MessageType},
-    id::{
-        marker::{ChannelMarker, UserMarker, ApplicationMarker},
-        Id,
-    },
-};
 use serde::Deserialize;
 use serde::Serialize;
 use sqlx::PgPool;
 use twilight_cache_inmemory::InMemoryCache;
+use twilight_model::{
+    channel::message::{MessageFlags, MessageReference, MessageType},
+    id::{
+        marker::{ApplicationMarker, ChannelMarker, UserMarker},
+        Id,
+    },
+};
 
 pub struct AgpContext {
     pub http: twilight_http::Client,
@@ -18,25 +18,25 @@ pub struct AgpContext {
     pub db: PgPool,
     pub reqwest: reqwest::Client,
     pub stats: Counters,
-    pub app_id: Id<ApplicationMarker>
+    pub app_id: Id<ApplicationMarker>,
 }
 
 pub struct Counters {
     pub guild_count: AtomicU32,
-    pub total_pings: AtomicU32
+    pub total_pings: AtomicU32,
 }
 
 #[derive(Serialize)]
 pub struct PostData {
     pub guild_count: u32,
-    pub total_pings: u32
+    pub total_pings: u32,
 }
 
 impl Default for Counters {
     fn default() -> Self {
-        Counters { 
+        Counters {
             guild_count: AtomicU32::new(0),
-            total_pings: AtomicU32::new(0)
+            total_pings: AtomicU32::new(0),
         }
     }
 }
@@ -64,5 +64,5 @@ pub struct Message<'a> {
 pub struct Stats {
     pub guild_count: u32,
     pub ppm: u32,
-    pub total_pings: u32
+    pub total_pings: u32,
 }

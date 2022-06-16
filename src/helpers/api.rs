@@ -1,8 +1,8 @@
 use std::sync::atomic::Ordering;
 
 use anyhow::Result;
-use reqwest::Client;
 use reqwest::header;
+use reqwest::Client;
 
 use crate::structs::AgpContext;
 use crate::structs::PostData;
@@ -15,9 +15,7 @@ pub async fn create_client() -> Result<Client> {
     auth.set_sensitive(true);
     headers.insert(header::AUTHORIZATION, auth);
 
-    let client = Client::builder()
-        .default_headers(headers)
-        .build()?;
+    let client = Client::builder().default_headers(headers).build()?;
 
     return Ok(client);
 }
@@ -28,7 +26,7 @@ impl AgpContext {
         let guilds = self.stats.guild_count.load(Ordering::Relaxed);
         let post_data = PostData {
             guild_count: guilds,
-            total_pings: pings
+            total_pings: pings,
         };
 
         self.reqwest
@@ -36,12 +34,13 @@ impl AgpContext {
             .json(&post_data)
             .send()
             .await?;
-            
+
         Ok(())
     }
-    
+
     pub async fn get_stats(&self) -> Result<Stats> {
-        let resp: Stats = self.reqwest
+        let resp: Stats = self
+            .reqwest
             .get("https://ghostping.xyz/api/stats")
             .send()
             .await?
@@ -49,5 +48,5 @@ impl AgpContext {
             .await?;
 
         Ok(resp)
-    }   
+    }
 }

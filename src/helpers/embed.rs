@@ -1,7 +1,7 @@
 use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::{
     channel::embed::Embed,
-    datetime::Timestamp,
+    util::Timestamp,
     id::{marker::UserMarker, Id},
 };
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, ImageSource};
