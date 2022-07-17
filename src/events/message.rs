@@ -1,15 +1,15 @@
 use anyhow::Result;
-use rand::Rng;
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::SystemTime;
 use twilight_model::id::marker::ChannelMarker;
 use twilight_model::id::Id;
 use twilight_model::{
-    util::Timestamp,
     gateway::payload::incoming::{MessageDelete, MessageUpdate},
+    util::Timestamp,
 };
 
+use crate::helpers::color::gen_color;
 use crate::{
     helpers::{embed::AlertEmbed, message},
     structs::{GuildConfig, Message},
@@ -35,11 +35,7 @@ pub async fn handle_ghost_ping(
     )?;
     let color = if let Some(color) = config.color {
         if color == -1 {
-            let mut rng = rand::thread_rng();
-            let r = rng.gen_range(0..255);
-            let g = rng.gen_range(0..255);
-            let b = rng.gen_range(0..255);
-            (r << 16) + (g << 8) + b
+            gen_color()
         } else {
             color
         }
@@ -60,8 +56,6 @@ pub async fn handle_ghost_ping(
         .embeds(&[embed.build()])?
         .exec()
         .await?;
-
-    ctx.increment_stats().await?;
 
     Ok(())
 }

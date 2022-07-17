@@ -4,12 +4,13 @@ use twilight_model::{
         CommandOption, CommandType,
     },
     channel::ChannelType,
-    id::Id, guild::Permissions,
+    guild::Permissions,
+    id::Id,
 };
 
 use crate::structs::AgpContext;
 
-pub mod api;
+pub mod color;
 pub mod database;
 pub mod embed;
 pub mod message;
@@ -30,7 +31,16 @@ pub fn commands() -> [Command; 5] {
             id: None,
             kind: CommandType::ChatInput,
             name: "redirect".to_string(),
-            options: vec![CommandOption::Channel(ChannelCommandOptionData {channel_types:vec![ChannelType::GuildText,ChannelType::GuildNews],description:"The channel for alerts to redirect to (Don't set to reset this option)".to_string(),name:"channel".to_string(),required:false, description_localizations: None, name_localizations: None })],
+            options: vec![CommandOption::Channel(ChannelCommandOptionData {
+                channel_types: vec![ChannelType::GuildText, ChannelType::GuildNews],
+                description:
+                    "The channel for alerts to redirect to (Don't set to reset this option)"
+                        .to_string(),
+                name: "channel".to_string(),
+                required: false,
+                description_localizations: None,
+                name_localizations: None,
+            })],
             version: Id::new(1),
             default_member_permissions: Some(Permissions::ADMINISTRATOR),
             dm_permission: Some(false),
@@ -44,7 +54,13 @@ pub fn commands() -> [Command; 5] {
             id: None,
             kind: CommandType::ChatInput,
             name: "etoggle".to_string(),
-            options: vec![CommandOption::Boolean(BaseCommandOptionData {description:"The option to enable or disable this setting".to_string(),name:"enable".to_string(),required:true, description_localizations: None, name_localizations: None })],
+            options: vec![CommandOption::Boolean(BaseCommandOptionData {
+                description: "The option to enable or disable this setting".to_string(),
+                name: "enable".to_string(),
+                required: true,
+                description_localizations: None,
+                name_localizations: None,
+            })],
             version: Id::new(1),
             default_member_permissions: Some(Permissions::ADMINISTRATOR),
             dm_permission: Some(false),
@@ -59,7 +75,13 @@ pub fn commands() -> [Command; 5] {
             id: None,
             kind: CommandType::ChatInput,
             name: "mentiononly".to_string(),
-            options: vec![CommandOption::Boolean(BaseCommandOptionData {description:"The option to enable or disable this setting".to_string(),name:"enable".to_string(),required:true, description_localizations: None, name_localizations: None })],
+            options: vec![CommandOption::Boolean(BaseCommandOptionData {
+                description: "The option to enable or disable this setting".to_string(),
+                name: "enable".to_string(),
+                required: true,
+                description_localizations: None,
+                name_localizations: None,
+            })],
             version: Id::new(1),
             default_member_permissions: Some(Permissions::ADMINISTRATOR),
             dm_permission: Some(false),
@@ -73,7 +95,15 @@ pub fn commands() -> [Command; 5] {
             id: None,
             kind: CommandType::ChatInput,
             name: "setcolor".to_string(),
-            options: vec![CommandOption::String(ChoiceCommandOptionData {autocomplete:true,choices:vec![],description:"Color to set the alert".to_string(),name:"color".to_string(),required:true, description_localizations: None, name_localizations: None })],
+            options: vec![CommandOption::String(ChoiceCommandOptionData {
+                autocomplete: true,
+                choices: vec![],
+                description: "Color to set the alert".to_string(),
+                name: "color".to_string(),
+                required: true,
+                description_localizations: None,
+                name_localizations: None,
+            })],
             version: Id::new(1),
             default_member_permissions: Some(Permissions::ADMINISTRATOR),
             dm_permission: Some(false),

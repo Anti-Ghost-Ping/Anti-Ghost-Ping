@@ -16,7 +16,6 @@ pub struct AgpContext {
     pub http: twilight_http::Client,
     pub cache: InMemoryCache,
     pub db: PgPool,
-    pub reqwest: reqwest::Client,
     pub stats: Counters,
     pub app_id: Id<ApplicationMarker>,
 }

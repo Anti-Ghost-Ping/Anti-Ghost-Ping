@@ -1,6 +1,6 @@
 use futures::StreamExt;
-use std::{env, sync::Arc, time::Duration};
-use tracing::{info, warn};
+use std::{env, sync::Arc};
+use tracing::info;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{Cluster, Event, Intents};
 use twilight_http::Client;
@@ -21,7 +21,7 @@ mod structs;
 
 use anyhow::Result;
 use events::*;
-use helpers::{api, database::db_connect};
+use helpers::database::db_connect;
 use structs::AgpContext;
 
 #[tokio::main]
@@ -55,7 +55,6 @@ async fn main() -> Result<()> {
         .resource_types(ResourceType::MESSAGE | ResourceType::USER)
         .build();
     let db = db_connect(&env::var("DATABASE_URL")?).await?;
-    let reqwest = api::create_client().await?;
 
     let current_app = http
         .current_user_application()
@@ -71,30 +70,12 @@ async fn main() -> Result<()> {
         .exec()
         .await?;
 
-    // interaction
-    //     .set_guild_commands(Id::new(700419839092850698), &[])
-    //     .exec()
-    //     .await?;
-
     let agp_ctx = Arc::new(AgpContext {
         http,
         cache,
         db,
-        reqwest,
         stats: Default::default(),
         app_id: current_app.id,
-    });
-
-    let interval_ctx = Arc::clone(&agp_ctx);
-    tokio::spawn(async move {
-        let mut interval = tokio::time::interval(Duration::from_secs(600));
-        interval.tick().await;
-        loop {
-            interval.tick().await;
-            if let Err(why) = interval_ctx.increment_stats().await {
-                warn!("Stats could not be incremented: {}", why);
-            }
-        }
     });
 
     tokio::spawn(async move {

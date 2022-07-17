@@ -1,10 +1,12 @@
 use twilight_cache_inmemory::model::CachedMessage;
 use twilight_model::{
     channel::embed::Embed,
-    util::Timestamp,
     id::{marker::UserMarker, Id},
+    util::Timestamp,
 };
 use twilight_util::builder::embed::{EmbedBuilder, EmbedFieldBuilder, ImageSource};
+
+use super::color::gen_color;
 
 pub struct AlertEmbed {
     pub author: Id<UserMarker>,
@@ -32,4 +34,28 @@ impl AlertEmbed {
 
         embed.build()
     }
+}
+
+pub fn create_color_preview(color: i32) -> Embed {
+    let mut embed_color = color;
+    if color == -1 {
+        embed_color = gen_color();
+    }
+
+    let embed = EmbedBuilder::new()
+        .color(embed_color as u32)
+        .title("Example Ghost Ping Alert")
+        .thumbnail(ImageSource::url("https://ghostping.xyz/static/assets/bot_logo.png").unwrap());
+
+    embed.build()
+}
+
+pub fn create_error_embed(msg: &str, desc: &str) -> Embed {
+    let embed = EmbedBuilder::new()
+        .color(13057565)
+        .title(msg)
+        .description(desc)
+        .thumbnail(ImageSource::url("https://ghostping.xyz/static/assets/bot_logo.png").unwrap());
+
+    embed.build()
 }
