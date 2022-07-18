@@ -56,9 +56,7 @@ async fn main() -> Result<()> {
         .build();
     let db = db_connect(&env::var("DATABASE_URL")?).await?;
 
-    sqlx::migrate!()
-    .run(&db)
-    .await?;
+    sqlx::migrate!().run(&db).await?;
 
     let current_app = http
         .current_user_application()
