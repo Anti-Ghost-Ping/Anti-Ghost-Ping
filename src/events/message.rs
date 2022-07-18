@@ -1,5 +1,4 @@
 use anyhow::Result;
-use tracing::warn;
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -11,6 +10,7 @@ use twilight_model::{
 };
 
 use crate::helpers::color::gen_color;
+use crate::unwrap;
 use crate::{
     helpers::{embed::AlertEmbed, message},
     structs::{GuildConfig, Message},
@@ -62,16 +62,10 @@ pub async fn handle_ghost_ping(
 }
 
 pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Result<()> {
-    let cached_msg = match ctx.cache.message(msg.id){
-        Some(msg) => msg,
-        None => {
-            warn!("{:#?}", msg);
-            return Ok(())
-        },
-    };
+    let cached_msg = unwrap!(ctx.cache.message(msg.id));
 
-    let author = ctx.cache.user(cached_msg.author()).unwrap();
-    let guild_id = cached_msg.guild_id().unwrap();
+    let author = unwrap!(ctx.cache.user(cached_msg.author()));
+    let guild_id = unwrap!(cached_msg.guild_id());
 
     if !author.bot {
         if cached_msg.mention_everyone() {
@@ -150,10 +144,10 @@ pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Resu
 
 pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Result<()> {
     let original_msg = ctx.cache.message(msg.id);
-    let guild_id = msg.guild_id.unwrap();
+    let guild_id = unwrap!(msg.guild_id);
 
     if let Some(original_msg) = original_msg {
-        let author = ctx.cache.user(original_msg.author()).unwrap();
+        let author = unwrap!(ctx.cache.user(original_msg.author()));
         if !author.bot {
             let mut orig_mentions = HashSet::new();
             let mut orig_role_mentions = HashSet::new();
@@ -162,16 +156,16 @@ pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Resu
             for mention in original_msg.mentions().iter() {
                 orig_mentions.insert(*mention);
             }
-            for mention in msg.mentions.as_ref().unwrap() {
+            for mention in unwrap!(msg.mentions.as_ref()) {
                 new_mentions.insert(mention.id);
             }
             for mention in original_msg.mention_roles().iter() {
                 orig_role_mentions.insert(*mention);
             }
-            for mention in msg.mention_roles.as_ref().unwrap() {
+            for mention in unwrap!(msg.mention_roles.as_ref()) {
                 new_role_mentions.insert(*mention);
             }
-            if original_msg.mention_everyone() && !msg.mention_everyone.unwrap() {
+            if original_msg.mention_everyone() && !unwrap!(msg.mention_everyone) {
                 let query: Option<GuildConfig> = sqlx::query_as!(
                     GuildConfig,
                     r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
@@ -189,7 +183,7 @@ pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Resu
                 });
 
                 let (title, content) =
-                    if msg.content.as_ref().unwrap().len() > 2500 || config.mention_only {
+                    if unwrap!(msg.content.as_ref()).len() > 2500 || config.mention_only {
                         (
                             "Mentions:",
                             String::from("Message contained @everyone and/or @here ping"),
@@ -219,7 +213,7 @@ pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Resu
                 });
 
                 let (title, content) =
-                    if msg.content.as_ref().unwrap().len() > 2500 || config.mention_only {
+                    if unwrap!(msg.content.as_ref()).len() > 2500 || config.mention_only {
                         (
                             "Mentions:",
                             original_msg

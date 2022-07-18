@@ -14,6 +14,7 @@ pub mod color;
 pub mod database;
 pub mod embed;
 pub mod message;
+pub mod macros;
 
 impl AgpContext {
     pub fn interaction(&self) -> twilight_http::client::InteractionClient {
