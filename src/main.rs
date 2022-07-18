@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
         .presence(UpdatePresencePayload::new(
             vec![MinimalActivity {
                 kind: ActivityType::Playing,
-                name: "/help | https://ghostping.xyz".to_string(),
+                name: "/ | https://ghostping.xyz".to_string(),
                 url: None,
             }
             .into()],
@@ -55,6 +55,10 @@ async fn main() -> Result<()> {
         .resource_types(ResourceType::MESSAGE | ResourceType::USER)
         .build();
     let db = db_connect(&env::var("DATABASE_URL")?).await?;
+
+    sqlx::migrate!()
+    .run(&db)
+    .await?;
 
     let current_app = http
         .current_user_application()

@@ -1,59 +1,175 @@
 {
   "db": "PostgreSQL",
-  "faf37344dc4f3b039bc554f765146d399d70ac27f7cfea01df365c5d18e14c2d": {
-    "query": "DELETE FROM guild_configs WHERE guild_id = $1",
+  "176ba003dd93cdc553ab1b3b7fb109c103cbacb2f0a9b73aa7b9197362b7ac24": {
     "describe": {
       "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "INSERT INTO guild_configs(guild_id, channel_id) VALUES($1, $2)"
+  },
+  "3db1bf903dcf33dc9a694b09ee56fa20264f34ab652c6e83fb7ca525de977ff8": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Bool",
+          "Int8"
+        ]
+      }
+    },
+    "query": "UPDATE guild_configs SET everyone = $1 WHERE guild_id = $2"
+  },
+  "42f34b1cb9b1818a5d102794cb0bd165888652a5cb65b368ea87f0d0da39bd6a": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Bool"
+        ]
+      }
+    },
+    "query": "INSERT INTO guild_configs(guild_id, mention_only) VALUES($1, $2)"
+  },
+  "5aba4ed750fcdef6410d27da3236befed71931df5326452d27640cc76774091f": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int4",
+          "Int8"
+        ]
+      }
+    },
+    "query": "UPDATE guild_configs SET color = $1 WHERE guild_id = $2"
+  },
+  "617ab86850bee1d3c821ecb3f6223572ef9b5f6d7f9b1cfd747782dd4416f4bd": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int4"
+        ]
+      }
+    },
+    "query": "INSERT INTO guild_configs(guild_id, color) VALUES($1, $2)"
+  },
+  "6229ac32ae92722bcbd0fac19025eb42ae92f397d566af87b355fe791f04f8ee": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Bool",
+          "Int8"
+        ]
+      }
+    },
+    "query": "UPDATE guild_configs SET mention_only = $1 WHERE guild_id = $2"
+  },
+  "6dfb562936720dc47a96d67429004f075519c5200b1314c98e8e4e72231b2523": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      }
+    },
+    "query": "UPDATE guild_configs SET channel_id = $1 WHERE guild_id = $2"
+  },
+  "ac08a68772a62a4f9ca795d9a32b8eec259ba2daad50b921d0b7e653a383a4cf": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Bool"
+        ]
+      }
+    },
+    "query": "INSERT INTO guild_configs(guild_id, everyone) VALUES($1, $2)"
+  },
+  "ddd7c64a673bb2012dabf91c7405a19ccab889fc868c812b919330ab0b59fe87": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
       "parameters": {
         "Left": [
           "Int8"
         ]
-      },
-      "nullable": []
-    }
+      }
+    },
+    "query": "UPDATE guild_configs SET channel_id = NULL WHERE guild_id = $1"
+  },
+  "faf37344dc4f3b039bc554f765146d399d70ac27f7cfea01df365c5d18e14c2d": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "DELETE FROM guild_configs WHERE guild_id = $1"
   },
   "fc6670c960eb9d92a25433ae827d2bd02e86aa7ba5cb3f4b458f10c858d90234": {
-    "query": "SELECT * FROM guild_configs WHERE guild_id = $1",
     "describe": {
       "columns": [
         {
-          "ordinal": 0,
           "name": "guild_id",
+          "ordinal": 0,
           "type_info": "Int8"
         },
         {
-          "ordinal": 1,
           "name": "channel_id",
+          "ordinal": 1,
           "type_info": "Int8"
         },
         {
-          "ordinal": 2,
           "name": "everyone",
+          "ordinal": 2,
           "type_info": "Bool"
         },
         {
-          "ordinal": 3,
           "name": "mention_only",
+          "ordinal": 3,
           "type_info": "Bool"
         },
         {
-          "ordinal": 4,
           "name": "color",
+          "ordinal": 4,
           "type_info": "Int4"
         }
       ],
-      "parameters": {
-        "Left": [
-          "Int8"
-        ]
-      },
       "nullable": [
         false,
         true,
         false,
         false,
         true
-      ]
-    }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "SELECT * FROM guild_configs WHERE guild_id = $1"
   }
 }
