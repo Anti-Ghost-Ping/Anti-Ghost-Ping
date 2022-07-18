@@ -13,8 +13,8 @@ use crate::structs::AgpContext;
 pub mod color;
 pub mod database;
 pub mod embed;
-pub mod message;
 pub mod macros;
+pub mod message;
 
 impl AgpContext {
     pub fn interaction(&self) -> twilight_http::client::InteractionClient {
