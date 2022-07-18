@@ -1,9 +1,21 @@
 use anyhow::Result;
-use sqlx::{postgres::PgPoolOptions, PgPool};
+use sqlx::{
+    postgres::{PgConnectOptions, PgPoolOptions},
+    ConnectOptions, PgPool,
+};
 
-pub async fn db_connect(connection_string: &str) -> Result<PgPool> {
+pub async fn db_connect() -> Result<PgPool> {
+    let mut options = PgConnectOptions::new()
+        .host("database")
+        .port(5432)
+        .username("postgres")
+        .password("password")
+        .database("postgres");
+
+    options.disable_statement_logging();
+
     Ok(PgPoolOptions::new()
         .max_connections(10)
-        .connect(connection_string)
+        .connect_with(options)
         .await?)
 }
