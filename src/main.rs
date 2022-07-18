@@ -92,7 +92,6 @@ async fn main() -> Result<()> {
 }
 
 async fn handle_event(shard_id: u64, event: Event, ctx: Arc<AgpContext>) -> Result<()> {
-    info!("Event receieved: {:#?}", event);
     match &event {
         Event::Ready(_) => {
             info!("Shard {} is ready!", shard_id)
