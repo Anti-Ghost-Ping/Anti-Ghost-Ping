@@ -1,4 +1,5 @@
 use anyhow::Result;
+use tracing::warn;
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::SystemTime;
@@ -61,7 +62,13 @@ pub async fn handle_ghost_ping(
 }
 
 pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Result<()> {
-    let cached_msg = ctx.cache.message(msg.id).unwrap();
+    let cached_msg = match ctx.cache.message(msg.id){
+        Some(msg) => msg,
+        None => {
+            warn!("{:#?}", msg);
+            return Ok(())
+        },
+    };
 
     let author = ctx.cache.user(cached_msg.author()).unwrap();
     let guild_id = cached_msg.guild_id().unwrap();

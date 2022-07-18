@@ -1,6 +1,6 @@
 use futures::StreamExt;
 use std::{env, sync::Arc};
-use tracing::{info, warn};
+use tracing::info;
 use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{Cluster, Event, Intents};
 use twilight_http::Client;
@@ -97,10 +97,7 @@ async fn handle_event(shard_id: u64, event: Event, ctx: Arc<AgpContext>) -> Resu
             info!("Shard {} is ready!", shard_id)
         }
         Event::MessageDelete(msg) => {
-            match message::on_message_delete(Arc::clone(&ctx), msg.to_owned()).await {
-                Ok(_) => info!("\n"),
-                Err(err) => warn!("{:#?}\n\n {:#?}", err, msg),
-            }
+            message::on_message_delete(Arc::clone(&ctx), msg.to_owned()).await?;
         }
         Event::MessageUpdate(msg) => {
             message::on_message_update(Arc::clone(&ctx), *msg.to_owned()).await?;
