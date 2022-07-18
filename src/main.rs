@@ -54,7 +54,7 @@ async fn main() -> Result<()> {
     let cache = InMemoryCache::builder()
         .resource_types(ResourceType::MESSAGE | ResourceType::USER)
         .build();
-    let db = db_connect().await?;
+    let db = db_connect(&env::var("DATABASE_URL")?).await?;
 
     sqlx::migrate!().run(&db).await?;
 
