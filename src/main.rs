@@ -76,7 +76,6 @@ async fn main() -> Result<()> {
         http,
         cache,
         db,
-        stats: Default::default(),
         app_id: current_app.id,
     });
 

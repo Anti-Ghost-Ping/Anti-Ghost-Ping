@@ -1,5 +1,3 @@
-use std::sync::atomic::AtomicU32;
-
 use serde::Deserialize;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -16,28 +14,13 @@ pub struct AgpContext {
     pub http: twilight_http::Client,
     pub cache: InMemoryCache,
     pub db: PgPool,
-    pub stats: Counters,
     pub app_id: Id<ApplicationMarker>,
-}
-
-pub struct Counters {
-    pub guild_count: AtomicU32,
-    pub total_pings: AtomicU32,
 }
 
 #[derive(Serialize)]
 pub struct PostData {
     pub guild_count: u32,
     pub total_pings: u32,
-}
-
-impl Default for Counters {
-    fn default() -> Self {
-        Counters {
-            guild_count: AtomicU32::new(0),
-            total_pings: AtomicU32::new(0),
-        }
-    }
 }
 
 #[derive(Debug)]
