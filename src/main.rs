@@ -27,7 +27,7 @@ use structs::AgpContext;
 #[tokio::main]
 async fn main() -> Result<()> {
     dotenv::dotenv().expect("Failed to load .env file");
-    tracing_subscriber::fmt::init();
+    // tracing_subscriber::fmt::init();
 
     let token = env::var("DISCORD_TOKEN")?;
     let intents = Intents::GUILD_MESSAGES | Intents::GUILDS | Intents::MESSAGE_CONTENT;
