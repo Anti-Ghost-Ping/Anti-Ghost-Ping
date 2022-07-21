@@ -62,9 +62,9 @@ pub async fn handle_ghost_ping(
 }
 
 pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Result<()> {
-    let cached_msg = unwrap!(ctx.cache.message(msg.id));
+    let cached_msg = unwrap!(ctx.cache.message(msg.id)).clone();
 
-    let author = unwrap!(ctx.cache.user(cached_msg.author()));
+    let author = unwrap!(ctx.cache.user(cached_msg.author())).clone();
     let guild_id = unwrap!(cached_msg.guild_id());
 
     if !author.bot {
@@ -143,98 +143,96 @@ pub async fn on_message_delete(ctx: Arc<AgpContext>, msg: MessageDelete) -> Resu
 }
 
 pub async fn on_message_update(ctx: Arc<AgpContext>, msg: MessageUpdate) -> Result<()> {
-    let original_msg = ctx.cache.message(msg.id);
+    let original_msg = unwrap!(ctx.cache.message(msg.id)).clone();
     let guild_id = unwrap!(msg.guild_id);
 
-    if let Some(original_msg) = original_msg {
-        let author = unwrap!(ctx.cache.user(original_msg.author()));
-        if !author.bot {
-            let mut orig_mentions = HashSet::new();
-            let mut orig_role_mentions = HashSet::new();
-            let mut new_mentions = HashSet::new();
-            let mut new_role_mentions = HashSet::new();
-            for mention in original_msg.mentions().iter() {
-                orig_mentions.insert(*mention);
-            }
-            for mention in unwrap!(msg.mentions.as_ref()) {
-                new_mentions.insert(mention.id);
-            }
-            for mention in original_msg.mention_roles().iter() {
-                orig_role_mentions.insert(*mention);
-            }
-            for mention in unwrap!(msg.mention_roles.as_ref()) {
-                new_role_mentions.insert(*mention);
-            }
-            if original_msg.mention_everyone() && !unwrap!(msg.mention_everyone) {
-                let query: Option<GuildConfig> = sqlx::query_as!(
-                    GuildConfig,
-                    r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
-                    guild_id.get() as i64
-                )
-                .fetch_optional(&ctx.db)
-                .await?;
+    let author = unwrap!(ctx.cache.user(original_msg.author())).clone();
+    if !author.bot {
+        let mut orig_mentions = HashSet::new();
+        let mut orig_role_mentions = HashSet::new();
+        let mut new_mentions = HashSet::new();
+        let mut new_role_mentions = HashSet::new();
+        for mention in original_msg.mentions().iter() {
+            orig_mentions.insert(*mention);
+        }
+        for mention in unwrap!(msg.mentions.as_ref()) {
+            new_mentions.insert(mention.id);
+        }
+        for mention in original_msg.mention_roles().iter() {
+            orig_role_mentions.insert(*mention);
+        }
+        for mention in unwrap!(msg.mention_roles.as_ref()) {
+            new_role_mentions.insert(*mention);
+        }
+        if original_msg.mention_everyone() && !unwrap!(msg.mention_everyone) {
+            let query: Option<GuildConfig> = sqlx::query_as!(
+                GuildConfig,
+                r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
+                guild_id.get() as i64
+            )
+            .fetch_optional(&ctx.db)
+            .await?;
 
-                let config = query.unwrap_or(GuildConfig {
-                    guild_id: 0,
-                    channel_id: None,
-                    everyone: false,
-                    mention_only: false,
-                    color: None,
-                });
+            let config = query.unwrap_or(GuildConfig {
+                guild_id: 0,
+                channel_id: None,
+                everyone: false,
+                mention_only: false,
+                color: None,
+            });
 
-                let (title, content) =
-                    if unwrap!(msg.content.as_ref()).len() > 2500 || config.mention_only {
-                        (
-                            "Mentions:",
-                            String::from("Message contained @everyone and/or @here ping"),
-                        )
-                    } else {
-                        ("Message:", original_msg.content().to_string())
-                    };
-                let converted_msg = Message::from_update(msg);
-                handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
-            } else if !orig_mentions.is_subset(&new_mentions)
-                || !orig_role_mentions.is_subset(&new_role_mentions)
-            {
-                let query: Option<GuildConfig> = sqlx::query_as!(
-                    GuildConfig,
-                    r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
-                    guild_id.get() as i64
-                )
-                .fetch_optional(&ctx.db)
-                .await?;
+            let (title, content) =
+                if unwrap!(msg.content.as_ref()).len() > 2500 || config.mention_only {
+                    (
+                        "Mentions:",
+                        String::from("Message contained @everyone and/or @here ping"),
+                    )
+                } else {
+                    ("Message:", original_msg.content().to_string())
+                };
+            let converted_msg = Message::from_update(msg);
+            handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
+        } else if !orig_mentions.is_subset(&new_mentions)
+            || !orig_role_mentions.is_subset(&new_role_mentions)
+        {
+            let query: Option<GuildConfig> = sqlx::query_as!(
+                GuildConfig,
+                r#"SELECT * FROM guild_configs WHERE guild_id = $1"#,
+                guild_id.get() as i64
+            )
+            .fetch_optional(&ctx.db)
+            .await?;
 
-                let config = query.unwrap_or(GuildConfig {
-                    guild_id: 0,
-                    channel_id: None,
-                    everyone: false,
-                    mention_only: false,
-                    color: None,
-                });
+            let config = query.unwrap_or(GuildConfig {
+                guild_id: 0,
+                channel_id: None,
+                everyone: false,
+                mention_only: false,
+                color: None,
+            });
 
-                let (title, content) =
-                    if unwrap!(msg.content.as_ref()).len() > 2500 || config.mention_only {
-                        (
-                            "Mentions:",
-                            original_msg
-                                .mentions()
+            let (title, content) =
+                if unwrap!(msg.content.as_ref()).len() > 2500 || config.mention_only {
+                    (
+                        "Mentions:",
+                        original_msg
+                            .mentions()
+                            .iter()
+                            .map(|m| format!("<@{}>", m.get()))
+                            .collect::<Vec<String>>()
+                            .join(" ")
+                            + &original_msg
+                                .mention_roles()
                                 .iter()
-                                .map(|m| format!("<@{}>", m.get()))
+                                .map(|m| format!("<@&{}>", m.get()))
                                 .collect::<Vec<String>>()
-                                .join(" ")
-                                + &original_msg
-                                    .mention_roles()
-                                    .iter()
-                                    .map(|m| format!("<@&{}>", m.get()))
-                                    .collect::<Vec<String>>()
-                                    .join(" "),
-                        )
-                    } else {
-                        ("Message:", original_msg.content().to_string())
-                    };
-                let converted_msg = Message::from_update(msg);
-                handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
-            }
+                                .join(" "),
+                    )
+                } else {
+                    ("Message:", original_msg.content().to_string())
+                };
+            let converted_msg = Message::from_update(msg);
+            handle_ghost_ping(&ctx, converted_msg, config, title, &content).await?;
         }
     }
 
