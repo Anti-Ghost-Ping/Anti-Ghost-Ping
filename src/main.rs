@@ -5,13 +5,9 @@ use twilight_cache_inmemory::{InMemoryCache, ResourceType};
 use twilight_gateway::{Cluster, Event, Intents};
 use twilight_http::Client;
 
-#[allow(unused_imports)]
-use twilight_model::{
-    gateway::{
-        payload::outgoing::update_presence::UpdatePresencePayload,
-        presence::{ActivityType, MinimalActivity, Status},
-    },
-    id::Id,
+use twilight_model::gateway::{
+    payload::outgoing::update_presence::UpdatePresencePayload,
+    presence::{ActivityType, MinimalActivity, Status},
 };
 
 mod commands;
@@ -26,7 +22,6 @@ use structs::AgpContext;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenv::dotenv().expect("Failed to load .env file");
     tracing_subscriber::fmt::init();
 
     let token = env::var("DISCORD_TOKEN")?;
