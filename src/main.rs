@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
     let http = Client::new(token);
     let cache = InMemoryCache::builder()
         .resource_types(ResourceType::MESSAGE | ResourceType::USER)
-        .message_cache_size(25)
+        .message_cache_size(10)
         .build();
     let db = db_connect(&env::var("DATABASE_URL")?).await?;
 
