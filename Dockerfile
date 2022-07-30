@@ -19,6 +19,5 @@ FROM debian:buster-slim
 RUN apt-get update && apt-get upgrade -y && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /bot/target/release/anti_ghost_ping /usr/local/bin/anti_ghost_ping
-COPY --from=builder /bot/.env /
 
 CMD ["/usr/local/bin/anti_ghost_ping"]
