@@ -48,7 +48,6 @@ name = "anti_ghost_ping"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "dotenv",
  "futures",
  "num-format",
  "rand",
