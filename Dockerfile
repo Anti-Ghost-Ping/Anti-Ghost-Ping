@@ -1,4 +1,4 @@
-FROM rustlang/rust:nightly as builder
+FROM rust:1.62.1 as builder
 
 WORKDIR /bot
 
