@@ -53,6 +53,7 @@ async fn main() -> Result<()> {
     let http = Client::new(token);
     let cache = InMemoryCache::builder()
         .resource_types(ResourceType::MESSAGE | ResourceType::USER)
+        .message_cache_size(25)
         .build();
     let db = db_connect(&env::var("DATABASE_URL")?).await?;
 
@@ -91,7 +92,6 @@ async fn main() -> Result<()> {
 }
 
 async fn handle_event(shard_id: u64, event: Event, ctx: Arc<AgpContext>) -> Result<()> {
-    info!("Event received: {:#?}", event.kind());
     match &event {
         Event::Ready(_) => {
             info!("Shard {} is ready!", shard_id)
