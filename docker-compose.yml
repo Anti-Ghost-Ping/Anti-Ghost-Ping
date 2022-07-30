@@ -1,9 +1,11 @@
 version: "3.9"
 services:
   bot:
-    build: .
+    image: leastrio/anti-ghost-ping
     depends_on:
       - database
+    env_file:
+      - config.env
   database:
     image: postgres
     restart: always
